@@ -1,0 +1,254 @@
+    
+    body
+    {
+      background-color: Black;
+      font-family: sans-serif;
+      color: White;
+    }
+    input.btnNav
+    {
+      background-color: black;
+      color: Grey;
+      border-color: green;
+    }
+    input.btnEdit
+    {
+      background-color: black;
+      color: Grey;
+      border-color: green;
+    }
+    input.btnDelete
+    {
+      background-color: #300000;
+      color: Grey;
+      border-color: darkred;
+      
+    }
+    table.mxMeterBridge
+    {
+      background-color: #101010;
+    }
+    table.mxMeter
+    {
+      height: 200px;
+      border-spacing: 0;
+      margin: 0;
+      width: 7px;
+    }
+    tr.meterMark
+    {
+      background-color: red;
+      height: 2px;
+    }
+    tr.meterPeak
+    {
+      height: 1px;
+    }
+    tr.meterRms
+    {
+      background-color: lime;
+      height: 1px;
+    }
+    table.meterScale tr td
+    {
+      font-size: 8px;
+      vertical-align: bottom;
+      text-align: center;
+    }
+    td.mxMeter
+    {
+      width: 7px;
+    }
+    td.meterScale
+    {
+      width: 10px;
+    }
+    table.meterScale
+    {
+      height: 200px;
+      border-spacing: 0;
+      margin: 0;
+      width: 100%;
+    }
+    tr.dbPlus td
+    {    
+      border-bottom: solid;
+      border-bottom-width: 1px;
+      color: white;
+    }
+    tr.dbZero td
+    {    
+      border-bottom: solid;
+      border-bottom-width: 1px;
+    }
+    tr.dbMinus td
+    {    
+      border-bottom: solid;
+      border-bottom-width: 1px;
+      color: lime;
+    }
+    tr.scalePad td
+    {
+      border-bottom: none;
+      border-bottom-width: 0;
+    }
+    td.meterName
+    {
+      width: 6em;
+      background-color: #303030;
+      text-align: center;
+      font-size: 0.8em;
+    }
+    table.tblMatrix input
+    {
+      width: 6em;
+      height: 3em;
+      font-size: 1em;
+    }
+    table.tblMatrix
+    {
+      empty-cells:show;
+      font-size: 0.7em;
+    }
+    table.tblMatrix tr td
+    {
+      width: 6em;
+    }
+    th.matrixOk
+    {
+      width: 6em;
+      background-color: Gray;
+      color: black;
+    }
+    th.matrixPartial
+    {
+      width: 6em;
+      background-color: #303030;
+      color: LightGrey;
+    }
+    th.matrixDead
+    {
+      width: 6em;
+      background-color: #181818;
+      color: Grey;
+    }
+    th.matrixBad
+    {
+      width: 6em;
+      background-color: DarkRed;      
+    }
+    th.matrixOkCol
+    {
+      width: 12em;
+      background-color: Gray;
+      color: black;
+    }
+    th.matrixPartialCol
+    {
+      width: 8em;
+      background-color: #303030;
+      color: LightGrey;
+    }
+    th.matrixDeadCol
+    {
+      width: 8em;
+      background-color: #181818;
+      color: Grey;
+    }
+    th.matrixBadCol
+    {
+      width: 8em;
+      background-color: DarkRed;      
+    }
+    td.portKnown
+    {
+      color: White;
+    }
+    td.portKnownUnavail
+    {
+      color: LightGrey;
+    }
+    td.portUnknown
+    {
+      color: Lime;
+    }
+    .mtxName
+    {
+      display: inline;
+    }
+    p.mtxDesc
+    {
+      display: inline;
+      font-style: italic;      
+    }
+    .btnUnpatched
+    {
+      background-color: Black;
+      color: DarkRed;
+      border-color: #303030;
+    }
+    .btnPatched
+    {
+      background-color: Lime;
+    }
+    .btnFucked
+    {
+      background-color: Red;
+    }
+    .btnPartialPatch
+    {
+      background-color: Yellow;
+    }
+    .btnInactive
+    {
+      background-color: #303030;
+      color: LightGrey;
+    }
+    .btnOverPatch
+    {
+      background-color: Orange;
+    }
+    .btnPending
+    {
+      background-color: Red;
+    }
+	ul.cfgList
+    {
+      list-style: none;
+    }
+    .cfgName
+    {
+      font-weight: 700;
+    }
+    .cfgDesc
+    {
+      font-style: italic;
+    }
+    .cfgDetail
+    {
+      font-style: italic;
+      color: gray;
+    }
+    .cfgNoPorts
+    {
+      font-style: italic;
+      font-weight: bold;
+      color: red;
+    }
+    .tblUnderRule
+    {
+        background-color: #000040; 
+        height:3px;
+    }
+    #clock
+    {
+        color: green;
+        font-weight: bold;
+        font-size: 1.6em;
+    }
+    table.portMap tr td
+    {
+    	vertical-align: top;
+    }
+        
+        

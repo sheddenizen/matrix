@@ -1,0 +1,321 @@
+<html>
+<body><h1>Patting</h1>
+<p>Jack LSP.</p>
+<p>
+<?php
+
+	class Signal
+	{
+		private $client = "";
+		private $left = "";
+		private $right = "";
+		private $isOutput;
+		private $patches = array();
+		private function FixFW($jackPort)
+		{
+			if (preg_match("/1394:(\d+).*_(.+)$/", $jackPort, $what))
+			{
+				return "$what[1]_$what[2]";
+			}
+			if (preg_match("/Loop:(\d+).*_(.+)$/", $jackPort, $what))
+			{
+				return "LB_$what[1]_$what[2]";
+			}			
+		}
+		public function JackPorts()
+		{
+			return array("$this->client:$this->left", "$this->client:$this->right");
+		}
+		public function DisplayName()
+		{
+			if ($this->client === "firewire_pcm")
+			{
+				return "FireWire:".$this->FixFW($this->left)."/".$this->FixFW($this->right);
+			}
+			return "$this->client:$this->left/$this->right";
+		}
+		public function DisplayVertical()
+		{
+			if ($this->client === "firewire_pcm")
+			{
+				return "FireWire ".$this->FixFW($this->left)." ".$this->FixFW($this->right);
+			}
+			return "$this->client $this->left $this->right";
+
+#			$name = $this->DisplayName();
+#			$out = "";
+#			for ($i = 0; $i < strlen($name); ++$i)
+#			{
+#				$out .= $name[$i]."<br>";
+#			}
+#			return $out;
+		}
+		public function Dump()
+		{
+			echo ($this->DisplayName());
+			echo ($this->isOutput ? " => " : " <= ");
+			foreach ($this->patches as $patch=>$dummy)
+			{
+				echo ("'$patch', ");
+			}
+			echo ("<br>\n");                                			
+		}
+		public function IsValid()
+		{
+			return (isset($this->isOutput) &&  $this->client !== "");
+		}
+		public function IsOutput()
+		{
+			return $this->isOutput;
+		}
+		public function IsDirectionKnown()
+		{
+			return isset($this->isOutput);
+		}
+		public function SetOutput($isOutput)
+		{
+			$this->isOutput = $isOutput;
+		}
+		public function Merge($other)
+		{
+            if (!$this->IsValid())
+            {
+                return false;
+            }
+            if ($this->right === "" &&
+                $other->right === "" &&
+                $this->client === $other->client && 
+                $this->isOutput === $other->isOutput)
+            {
+                $this->right = $other->left;
+                array_merge($this->patches, $other->patches); 
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+		}
+		public function AddPort($jackPort)
+		{
+			$what = "";
+			if (preg_match("/^([^:]+):(.+)$/", $jackPort, $what))
+			{
+				if ($this->left === "")
+				{
+					$this->left = $what[2];
+					$this->client = $what[1];
+					return true;
+				}
+				else if ($this->right === "" && $this->client === $what[1])
+				{
+					$this->right = $what[2];
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+		}
+		public function AddPatch($dest)
+		{
+			$this->patches[$dest] = 1;
+		}
+		public function IsPortPatched($jackPort)
+		{
+			return array_search($jackPort, $this->patches);
+		}
+		public function IsPatched($signal)
+		{
+			$pcount = 0;
+#			echo "L:".$signal->client.":".$signal->left." R:".$signal->client.":".$signal->right."<br>";
+#			$signal->Dump();
+			if (array_key_exists($signal->client.":".$signal->left, $this->patches))
+			{
+				++$pcount;
+			}
+			if (array_key_exists($signal->client.":".$signal->right, $this->patches))
+			{
+				++$pcount;
+			}
+			return $pcount;
+		}
+    }  # class Signal
+ 
+    function MergePairs($signals)
+    {
+        $result = array();
+        $pair = new Signal();
+        foreach($signals as $sig)
+        {
+            if ($pair->IsValid())
+            {
+                $merged = $pair->Merge($sig);
+                $result[] = $pair;
+
+                if ($merged)
+                {
+                    $pair = new Signal();
+                }
+                else
+                {
+                    $pair->Dump();
+                    $sig->Dump();
+                    echo ("<hr/>");
+                    $pair = $sig;
+                }
+            }
+            else
+            {
+                $pair = $sig;
+            }
+        }
+        if ($pair->IsValid())
+        {
+            $result[] = $pair;
+        }
+        return $result;
+    }
+
+
+	if (isset($_GET["action"]))
+	{
+		$action = $_GET["action"];
+		if ($action === "dis")
+		{
+			$action = "w_jack_disconnect";
+		}
+		else if ($action === "con")
+		{
+			$action = "w_jack_connect";
+		}
+		else
+		{
+			$action = "";
+		}
+		if ($action !== "")
+		{
+			$lpatch = "'".$_GET["srcl"]."' '".$_GET["destl"]."'";
+			$rpatch = "'".$_GET["srcr"]."' '".$_GET["destr"]."'";
+			$lsp = popen ("./$action $lpatch", "r");
+			$res = fread($lsp, 100000);
+			pclose($lsp);
+			$lsp = popen ("./$action $rpatch", "r");
+			$res .= "\n".fread($lsp, 100000);
+			pclose($lsp);
+			echo ("<!-- Patching: $action, $lpatch, $rpatch\nResult: $res -->");
+		}
+
+	}
+	
+    $lsp = popen ("./w_jack_lsp -t -c -p", "r");
+	$res = "";
+    do
+	{
+		$chunk = fread($lsp, 100000);
+		$res .= $chunk;
+	} while ($chunk !== "");
+
+    $lines = explode("\n", $res);
+
+	$signal = new Signal();
+
+    $outputs = array();
+	$inputs = array();
+    
+    foreach($lines as $line)
+    {
+        if (preg_match("/^[ \t]+([^ ].*)$/", $line, $what))
+        {
+            if (preg_match("/properties:/", $line))
+            {
+                $isOutput = preg_match("/output/", $line);
+                $signal->SetOutput($isOutput);
+            }
+			else if (preg_match("/32 bit float mono audio/", $line))
+			{}
+			else if (preg_match("/8 bit raw midi/", $line))
+			{
+				# Ack, this is a midi channel; invalidate it so it doesn't get added
+				$signal = new Signal();
+			}
+            else
+            {
+                # It's not properties; it must be a patch
+                $signal->AddPatch($what[1]);
+            }
+        }
+        else
+        {
+            if ($signal->IsValid())
+            {
+                if ($signal->IsOutput())
+                {
+                    $outputs[] = $signal;
+                }
+                else
+                {
+                    $inputs[] = $signal;
+                }
+            }
+            $signal = new Signal();
+            $signal->AddPort($line);
+        }      
+    }
+
+    if ($signal->IsValid())
+    {
+        if ($signal->IsOutput())
+        {
+            $outputs[] = $signal;
+        }
+        else
+        {
+            $inputs[] = $signal;
+        }
+    }
+    $outputs = MergePairs($outputs);
+    $inputs = MergePairs($inputs);
+    
+    echo ("<hr/>");
+	echo ("<center>\n<table border=\"1\"><th></th>\n");
+
+	foreach($outputs as $output)
+	{
+		echo ("<th>".$output->DisplayVertical()."</th>\n");
+	}
+
+	foreach($inputs as $input)
+	{
+		echo ("<tr>\n<th>".$input->DisplayName()."</th>\n");
+		foreach($outputs as $output)
+		{
+			$patchCount = $input->IsPatched($output);
+			$jp = $output->JackPorts();
+			$ports = "&srcl=".$jp[0];
+			$ports .= "&srcr=".$jp[1];
+			$jp = $input->JackPorts();
+			$ports .= "&destl=".$jp[0];
+			$ports .= "&destr=".$jp[1];
+			if ($patchCount > 0)
+			{
+				echo ("<td align=\"center\" bgcolor=\"green\">");
+				echo ("<a href=\"index.php?action=dis$ports\">"); 
+			}
+			else
+			{
+				echo ("<td align=\"center\" bgcolor=\"pink\">");
+				echo ("<a href=\"index.php?action=con$ports\">"); 
+			}
+			
+			echo ("&nbsp;&nbsp;&nbsp;</a></td>\n");
+		}
+		echo ("\n</tr>\n");
+	}
+	echo ("</table>\n</center>\n");
+    
+?>
+</p>
+</body>
+</html>

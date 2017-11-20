@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Komodo Project File - DO NOT EDIT -->
+<project id="81eaff46-de73-454f-bdfd-3cf18201ac47" kpf_version="5" name="switcher.komodoproject">
+<file id="10a896cb-0d43-4fdd-be20-1c14ce090fe7" idref="81eaff46-de73-454f-bdfd-3cf18201ac47" name="jack_cfg.php" url="jack_cfg.php">
+</file>
+<file id="2c1c12a2-affe-4436-9ee0-390dff427c68" idref="81eaff46-de73-454f-bdfd-3cf18201ac47" name="jack_patching.php" url="jack_patching.php">
+</file>
+<file id="3b4e045c-4e32-4160-9e03-7a34825da5d3" idref="81eaff46-de73-454f-bdfd-3cf18201ac47" name="jack_daemon.php" url="jack_daemon.php">
+</file>
+<file id="43ffb50f-1cdc-47ef-a36e-eceb8f716056" idref="81eaff46-de73-454f-bdfd-3cf18201ac47" name="commandproc.php" url="commandproc.php">
+</file>
+<file id="48a3b750-3496-49fb-aad3-3e228e7bedb0" idref="81eaff46-de73-454f-bdfd-3cf18201ac47" name="jack_queries.php" url="jack_queries.php">
+</file>
+<file id="5021a05b-0182-4bce-90e7-579d2ed2a33f" idref="81eaff46-de73-454f-bdfd-3cf18201ac47" name="jack_common.css" url="jack_common.css">
+</file>
+<file id="5d7bc372-740b-4ea6-938e-7835091ff047" idref="81eaff46-de73-454f-bdfd-3cf18201ac47" name="jack_line.php" url="jack_line.php">
+</file>
+<file id="63ac83a6-c903-4ba7-986b-d31ea2e203f0" idref="81eaff46-de73-454f-bdfd-3cf18201ac47" name="jack_meter.php" url="jack_meter.php">
+</file>
+<file id="73e01413-9688-4140-9348-dc8a4f7767d6" idref="81eaff46-de73-454f-bdfd-3cf18201ac47" name="jack_mysql.php" url="jack_mysql.php">
+</file>
+<file id="87a90655-1263-458f-9fdd-07807fa1f787" idref="81eaff46-de73-454f-bdfd-3cf18201ac47" name="index.php" url="index.php">
+</file>
+<file id="8cf71bc3-0bb8-4df2-8a77-364c483afb8d" idref="81eaff46-de73-454f-bdfd-3cf18201ac47" name="jack_matrix.php" url="jack_matrix.php">
+</file>
+<file id="a703ef17-89ca-45fe-b79d-13803f4ecae1" idref="81eaff46-de73-454f-bdfd-3cf18201ac47" name="jack_command.php" url="jack_command.php">
+</file>
+<file id="cbb76500-f764-4395-a3a7-b1440aeef56c" idref="81eaff46-de73-454f-bdfd-3cf18201ac47" name="utility.php" url="utility.php">
+</file>
+<file id="f8907cdc-ec32-4753-9f99-c99f54a57cad" idref="81eaff46-de73-454f-bdfd-3cf18201ac47" name="command.php" url="command.php">
+</file>
+<preference-set idref="81eaff46-de73-454f-bdfd-3cf18201ac47">
+  <string id="spellcheckLangID">en-US</string>
+</preference-set>
+</project>
