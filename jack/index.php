@@ -39,14 +39,14 @@ $h = new HtmlState();
 $matrixCmds = new MatrixDrawCommands();
 $cfgCmds = new ConfigureCommands();
 
-PopulateState();
+#PopulateState();
 
 ProcessCommands(ExtractKeyCmds($_GET + $_POST));
 
-if (ApplyPatching())
-{
-	PopulateState();
-}
+#if (ApplyPatching())
+#{
+#	PopulateState();
+#}
 
 //echo("<br><hr>\n");
 

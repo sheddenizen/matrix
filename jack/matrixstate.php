@@ -7,7 +7,9 @@ $patchLog = "";
 function DoNothing($foo) {}
 $debug = "DoNothing";
 
-const kLogFile = "/var/www/jack/patchlog.txt";
+const kLogFile = "/var/log/matrix/patchlog.txt";
+const kPokeFifo = "/dev/shm/jack_daemon_pokertron.fifo";
+
 
 function LogLine($line)
 {
@@ -35,10 +37,22 @@ if ($patchLog != "")
 	Debug($patchLog);
 	// ProcessCommands($cmd);
 
-	if (ApplyPatching())
+	$fifo = fopen(kPokeFifo,"w");
+	if ($fifo)
 	{
-		PopulateState();
+		$res = fwrite($fifo,"MatrixUpdate\n");
+		Debug("Poked fifo: res=".$res);
+		fclose($fifo);
 	}
+	else
+	{
+		Debug("Unable to open fifo: ".kPokeFifo);
+	}
+	usleep(200000);
+//	if (ApplyPatching())
+//	{
+//		PopulateState();
+//	}
 };
 
 

@@ -1,4 +1,4 @@
-#!/usr/bin/php5
+#!/usr/bin/php
 <?php
 
 declare(ticks = 1);
@@ -9,6 +9,8 @@ const kLogFile = "/var/www/html/jack/patchlog.txt";
 const kLogFileArch = "/var/www/html/jack/patchlog.txt.1";
 // Threshold for archival
 const kLogSizeLimit = 1000000;
+
+const kPokeFifo = "/dev/shm/jack_daemon_pokertron.fifo";
 
 $logFile = NULL;
 $logStat = stat(kLogFile);
@@ -45,73 +47,138 @@ $debug = "LogLine";
 
 require_once "jack_patching.php";
 
-function HandleUsr1( integer $signo , mixed $signinfo )
+$externalNotify = false;
+
+function HandleUsr1( int $signo )
 {
-    echo("Got signal ".$signo."/n");
+    echo("Got signal ".$signo."\n");
+	$externalNotify = true;
 }
 
 pcntl_signal(SIGUSR1, "HandleUsr1", false);
+umask(0155);
+posix_mkfifo(kPokeFifo,0622);
+umask(0022);
 
 while (1)
 {
     echo ("Patching daemon\n");
-    $lsp = popen ("/var/www/html/jack/jack_evmon", "r");
-    
+#    $lsp = popen ("/var/www/html/jack/jack_evmon", "r");
+    $lsp = popen ("stdbuf -o L /usr/bin/jack_evmon", "r");
+    $fifo = fopen (kPokeFifo, "r+");
+    stream_set_blocking($fifo, FALSE);   
+
     $newPort = false;
     $removedPort = false;
     $newConnect = false;
     $newDisconnect = false;
 
-    if ($lsp !== FALSE)
+    if ($lsp === FALSE)
     {
-        echo ("Monitoring...\n");
-        $res = FALSE;
-        while (!feof($lsp))
-        {
-            $res = rtrim(fgets($lsp, 256));
-            
-            pcntl_signal_dispatch();
-            
-            if ($res !==false)
-            {
-                $newPort |= preg_match("/^Port.* registered/", $res);
-                $removedPort |= preg_match("/^Port.* unregistered/", $res);
-                $newConnect = preg_match("/^Ports.* connected/", $res);
-                $newDisconnect = preg_match("/^Port.* disconnected/", $res);
-            
-                if ($newPort || $removedPort || $newConnect || $newDisconnect)
-                {
-                    LogLine($res);
-                }
-                
-                if (preg_match("/^Graph reordered/", $res))
-                {
-                    if ($newPort || $removedPort)
-                    {
-                        PopulateState();
-                    }
-                    if ($newPort)
-                    {
-                        if (ApplyPatching())
-                        {
-                            PopulateState();
-                        }
-                        $newPort = false;
-                    }
-                    $newPort = $removedPort = false;
-                }
-            }
-            else
-            {
-                LogLine("Failed to read line");
-            }
-        }
-        pclose($lsp);
-    }
+        echo ("Unable to start ev_mon\n");
+		exit(1);
+	}
+	echo ("Monitoring...\n");
+	$res = FALSE;
+	$timeout = 0;
+	$patchingActive = false;
+
+	while (!feof($lsp))
+	{
+		$write = NULL;
+		$expected = NULL;
+		$read = array($lsp, $fifo);
+//		$read = array($lsp);
+		$changed = stream_select($read, $write, $expected, $timeout / 1000, ($timeout % 1000) * 1000 );
+		
+		$timeout = 20000;
+		
+		LogLine("Changed: ".$changed);
+		if ($changed == 0)
+		{
+			PopulateState();
+			if ($newPort || $externalNotify ||
+				( !$patchingActive && ( $newConnect || $newDisconnect )))
+			{
+				$reason = ($externalNotify ? "External, " : "").($newPort ? "New Port, " : "")
+					.($newConnect ? "New Connection, " : "").($newConnect ? "New Disconnection, " : "")
+					.($patchingActive ? "(Patching already in progress)" : "");
+				if (ApplyPatching())
+				{
+					LogLine("Applied patching: ".$reason);
+					# PopulateState();
+				}
+				else
+				{
+					LogLine("No additional patching required: ".$reason);
+				}
+				$patchingActive = true;
+				$externalNotify = false;
+			}
+			else
+			{
+				$patchingActive = false;
+			}
+			$newPort = $removedPort = false;
+			$newConnect = $newDisconnect = false;
+		}
+		else
+		{
+			foreach ($read as $fd)
+			{
+				if ($fd == $lsp)
+				{
+					$res = rtrim(fgets($lsp, 256));
+					
+					pcntl_signal_dispatch();
+					
+					if ($res !==false)
+					{
+						echo $res."\n";
+						$newPort |= preg_match("/^Port.* registered/", $res);
+						$removedPort |= preg_match("/^Port.* unregistered/", $res);
+						$newConnect |= preg_match("/^Ports.* connected/", $res);
+						$newDisconnect |= preg_match("/^Port.* disconnected/", $res);
+					
+						if ($newPort || $removedPort || $newConnect || $newDisconnect)
+						{
+							LogLine("Jack Activity: ".$res);
+							$timeout = 20;
+						}
+						else
+						{
+							LogLine("Uninteresting: ".$res);							
+						}
+						
+						if (preg_match("/^Graph reordered/", $res))
+						{
+							LogLine("Graph reordered - not supported anymore?");
+						}
+					}
+				}
+				if ($fd == $fifo)
+				{
+					LogLine("Poke from fifo");
+					$res=fread($fifo, 256);
+					LogLine("Got: $res");
+					if (feof($fifo))
+					{
+						fclose($fifo);
+						$fifo = fopen (kPokeFifo, "r+");
+						stream_set_blocking($fifo, FALSE);   
+					}
+					$timeout = 0;
+					$externalNotify = TRUE;
+				}
+			}
+		}
+	}
+	pclose($lsp);
+	fclose($fifo);
     sleep(5);
     LogLine("Broken pipe");
 } 
-
+unlink(kPokeFifo);
 fclose($logFile);
 
 ?>
